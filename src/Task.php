@@ -7,7 +7,7 @@ class Task
     private $handler;
     private $task;
     private $args;
-
+    private $sid;
     private $started = false;
 
     public function __construct(HandlerInterface $handler, callable $task, array $args = [])
@@ -41,7 +41,6 @@ class Task
                 break;
             }
         } // @codeCoverageIgnore
-        //@TODO why are we ignoring code coverage here? 
         // @codeCoverageIgnoreStart
         //
         $pid = pcntl_fork();
@@ -73,7 +72,16 @@ class Task
         } else {
             /**
              * Child
+             * We're detaching the child process from the parent so that if the main fpm restarts or is killed our process can continue. 
              */
+            
+            $sid = posix_setsid();
+            
+            if ($sid < 0) {
+                // if we're not able to detach from the parent then we should exit
+                exit();
+            }
+            $this->setSid($sid);
             register_shutdown_function(function () {
                 $error = error_get_last();
                 // @TODO why are we only logging this set of exceptions? do we ever not have non 1/256/4096 error codes
@@ -128,7 +136,15 @@ class Task
         }
         // @codeCoverageIgnoreEnd
     }
+    private function setSID($sid) 
+    {
+        $this->sid = $sid;
+    }
 
+    public function getSID() 
+    {
+        return $this->sid;
+    }
     // @codeCoverageIgnoreStart
     private function kill()
     {
