@@ -43,7 +43,7 @@ class Task
         } // @codeCoverageIgnore
         // @codeCoverageIgnoreStart
         //
-        $pid = pcntl_fork();
+        $pid = \pcntl_fork();
 
         if ($pid === -1) {
             // @TODO add more context to this exception. Perhaps the task name and some other arguments about that task
